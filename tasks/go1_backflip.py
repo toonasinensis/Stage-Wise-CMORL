@@ -371,7 +371,7 @@ class Env(VecTask):
                 rigid_shape_props_asset[s].restitution = self.restitution_coeffs[i, 0]
             self.gym.set_asset_rigid_shape_properties(robot_asset, rigid_shape_props_asset)
             # create robot instance
-            robot_handle = self.gym.create_actor(env_handle, robot_asset, start_pose, "robot", i, 0, 0)
+            robot_handle = self.gym.create_actor(env_handle, robot_asset, start_pose, "robot", i, 1, 0)
             # ========== randomize base frame's mass & CoM position ========== #
             if self.is_randomized:
                 body_props = self.gym.get_actor_rigid_body_properties(env_handle, robot_handle)

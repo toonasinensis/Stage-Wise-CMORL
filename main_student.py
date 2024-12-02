@@ -207,7 +207,10 @@ def train(args, task_cfg, algo_cfg):
                 for log_name in agent_args.logging['task_indep']:
                     log_data[f"metric/{log_name}"] = logger.get_avg(log_name, print_len if log_name in ['eplen', 'fail'] else print_len2)
                 wandb.log(log_data)
-                print(log_data)
+                # print(log_data)
+                print('\n')
+                print('\n')
+                print('\n')
 
             # send slack message
             if total_step - slack_step >= args.slack_freq and args.slack:
