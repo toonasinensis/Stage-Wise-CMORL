@@ -616,8 +616,8 @@ class Env(VecTask):
         # =================== calculate rewards =================== #
         # com height
         com_height = self.base_positions[:, 2]
-        self.rew_buf[:, 0] =  self.stage_buf[:, 0]*(-torch.abs(com_height - 0.35))
-        self.rew_buf[:, 0] += self.stage_buf[:, 1]*(-torch.abs(com_height - 0.2))
+        self.rew_buf[:, 0] =  self.stage_buf[:, 0]*(-torch.abs(com_height - 0.40))
+        self.rew_buf[:, 0] += self.stage_buf[:, 1]*(-torch.abs(com_height - 0.20))
         self.rew_buf[:, 0] += self.stage_buf[:, 2]*(com_height <= 0.5)*(com_height)
         self.rew_buf[:, 0] += self.stage_buf[:, 3]*(com_height <= 0.5)*(com_height)
         self.rew_buf[:, 0] += self.stage_buf[:, 4]*(-torch.abs(com_height - 0.35))

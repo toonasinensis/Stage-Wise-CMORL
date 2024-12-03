@@ -51,7 +51,7 @@ Stage-Wise-CMORL/
 It is required to train a teacher poicy first, and then train a student policy using the teacher policy.
 
 ### Teacher Learning
-
+python main_teacher.py --task_cfg_path tasks/lite3_backflip.yaml --algo_cfg_path algos/comoppo/lite3_backflip.yaml --wandb --seed 4
 - training: `python main_teacher.py --task_cfg_path tasks/{task_name}.yaml --algo_cfg_path algos/comoppo/{task_name}.yaml --wandb --seed 1`
 - test: `python main_teacher.py --task_cfg_path tasks/{task_name}.yaml --algo_cfg_path algos/comoppo/{task_name}.yaml --test --render --seed 1 --model_num {saved_model_num}`
 
