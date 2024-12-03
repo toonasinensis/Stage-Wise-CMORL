@@ -233,7 +233,7 @@ def test(args, task_cfg, algo_cfg):
     # create environments
     task_cfg['env']['num_envs'] = 1
     if 'randomize' in task_cfg['env']:
-        task_cfg['env']['randomize']['is_randomized'] = False
+        task_cfg['env']['randomize']['is_randomized'] = True
     task_cfg['env']['history_len'] = algo_cfg['history_len']
     env_fn = lambda: task_dict[task_cfg['name']](
         cfg=task_cfg, rl_device=args.device_name, sim_device=args.device_name, 

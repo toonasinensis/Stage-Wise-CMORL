@@ -104,7 +104,7 @@ env:
         ########################
         
     randomize:
-        is_randomized               : false
+        is_randomized               : True
         rand_period_motor_strength_s: 5.0
         rand_period_gravity_s       : 5.0
         rand_range_body_mass        : [-1.0, 3.0]
