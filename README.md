@@ -59,3 +59,4 @@ python main_teacher.py --task_cfg_path tasks/lite3_backflip.yaml --algo_cfg_path
 
 - training: `python main_student.py --task_cfg_path tasks/{task_name}.yaml --algo_cfg_path algos/student/{task_name}.yaml --wandb --seed 1`
 - test: `python main_student.py --task_cfg_path tasks/{task_name}.yaml --algo_cfg_path algos/student/{task_name}.yaml --test --render --seed 1 --model_num {saved_model_num}`
+python main_student.py --task_cfg_path tasks/lite3_backflip.yaml --algo_cfg_path algos/student/lite3_backflip.yaml --test --render --seed 7 --model_num 80000000

@@ -5,7 +5,7 @@ name: student
 teacher:
     algo_name: comoppo
     seed: 7
-    model_num: 1000000000
+    model_num: 100000000
 
 # for learning
 n_steps: 10000
