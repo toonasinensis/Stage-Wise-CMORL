@@ -7,7 +7,7 @@ from .normalizer import ObsRMS
 import numpy as np
 import torch
 import os
-
+import copy
 EPS = 1e-8
 
 class Agent:
@@ -59,7 +59,36 @@ class Agent:
         epsilon_tensor = torch.randn(norm_obs_tensor.shape[:-1] + (self.action_dim,), device=self.device)
         self.actor.updateActionDist(norm_obs_tensor, epsilon_tensor)
         _, unnorm_action_tensor = self.actor.sample(deterministic)
+        
+        # action_mean, action_log_std, action_std=  self.actor.forward(norm_obs_tensor)
+
         return unnorm_action_tensor
+
+
+    @torch.no_grad()
+    def act_inference(self,obs_tensor, deterministic:bool):
+      norm_obs_tensor = self.obs_rms.normalize(obs_tensor)
+
+      action_mean, action_log_std, action_std =  self.actor.forward(norm_obs_tensor)
+      return action_mean
+    
+    def save_actor(self):
+        # 创建示例输入
+        device = self.actor.device 
+        dummy_input = torch.randn(1, 420,device = device)  # 根据您的模型输入维度调整
+        # 使用 torch.jit.trace 导出
+        traced_model = torch.jit.trace(self.actor, dummy_input)
+        # 保存导出的模型
+        traced_model.save("model.pt")
+        # 创建一个示例张量
+
+        # 将张量转换为 NumPy 数组
+        mean =  self.obs_rms.mean.cpu().numpy()
+        var = self.obs_rms.var.cpu().numpy()
+        # 保存为 CSV 文件
+        np.savetxt('mean.csv', mean, delimiter=',')
+        np.savetxt('var.csv', var, delimiter=',')
+
 
     def step(self, obs_tensor, actions_tensor):
         self.replay_buffer.addTransition(obs_tensor, actions_tensor)
@@ -119,6 +148,3 @@ class Agent:
             cprint(f'[{self.name}] load fail.', bold=True, color="red")
             return 0
 
-    ################
-    # private method
-    ################

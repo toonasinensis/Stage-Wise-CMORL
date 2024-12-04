@@ -289,11 +289,19 @@ def test(args, task_cfg, algo_cfg):
         agent_args.__dict__[key] = algo_cfg[key]
     agent = algo_dict[args.algo_name.lower()](agent_args)
     agent.load(args.model_num)
-
+    agent.save_actor()
     with torch.no_grad():
         obs_tensor, states_tensor = vec_env.reset(is_uniform_rollout=False)
+    count=0
+    mean = np.loadtxt('mean.csv', delimiter=',')
+    var = np.loadtxt('var.csv',delimiter=',')
 
+    
+    
     # start rollouts
+    policy_exp = torch.jit.load("model.pt")
+    policy_exp.eval()
+    policy_exp.to(device=agent.device)
     for _ in range(100):
         reward_sums_tensor = torch.zeros((args.n_envs, args.reward_dim), device=args.device, requires_grad=False, dtype=torch.float32)
         cost_sums_tensor = torch.zeros((args.n_envs, args.cost_dim), device=args.device, requires_grad=False, dtype=torch.float32)
@@ -301,8 +309,21 @@ def test(args, task_cfg, algo_cfg):
 
         for step_idx in range(args.max_episode_len):
             with torch.no_grad():
-                # actions_tensor = agent.getAction(obs_tensor, False)
-                actions_tensor = agent.getAction(obs_tensor, True)
+                count+=0.02
+
+                reshaped_obs = obs_tensor.view(-1, 420)
+                cur_mean = torch.tensor(mean).to(agent.device)
+                cur_var = torch.tensor(var).to(agent.device)
+                reshaped_mean = cur_mean.view(1, -1).tile(1,10)
+                reshaped_var = cur_var.view(1, -1).tile(1, 10)
+                norm_obs = (reshaped_obs - reshaped_mean)/torch.sqrt(reshaped_var + 1e-8)
+                norm_obs=norm_obs.to(torch.float32)
+                # print(norm_obs)
+                actions_tensor=policy_exp(norm_obs)[0]
+                # print("actions_tensor",actions_tensor,"\n")
+                # actions_tensor = agent.act_inference(obs_tensor, True)
+                # print("right actions_tensor",actions_tensor,"\n")
+
                 obs_tensor, states_tensor, rewards_tensor, dones_tensor, infos = vec_env.step(actions_tensor)
                 reward_sums_tensor += rewards_tensor
                 cost_sums_tensor += infos['costs']

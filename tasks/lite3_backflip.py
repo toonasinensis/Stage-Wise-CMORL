@@ -698,7 +698,9 @@ class Env(VecTask):
         ).type(torch.float32)
         self.stage_buf[:, 1] = (1.0 - from1_to2)*self.stage_buf[:, 1]
         self.stage_buf[:, 2] = from1_to2 + (1.0 - from1_to2)*self.stage_buf[:, 2]
-
+        # print("self.is_half_turn_buf == 0",self.is_half_turn_buf )
+        # print("com_height",com_height)
+        # print("self.start_time_buf",self.start_time_buf)
         from0_to1 = torch.logical_and(
             self.stage_buf[:, 0] == 1.0, torch.logical_and(
                 self.progress_buf*self.control_dt > self.start_time_buf, torch.logical_and(
@@ -722,7 +724,11 @@ class Env(VecTask):
         self.land_time_buf[:] = land_masks*(self.progress_buf*self.control_dt) + (1.0 - land_masks)*self.land_time_buf
         cmd_masks = torch.logical_and(self.cmd_time_buf == 0, self.stage_buf[:, 1] == 1).type(torch.float32)
         self.cmd_time_buf[:] = cmd_masks*(self.progress_buf*self.control_dt) + (1.0 - cmd_masks)*self.cmd_time_buf
-
+        # if self.progress_buf*self.control_dt>0.5:
+        #     self.cmd_time_buf[:] =self.progress_buf*self.control_dt
+        #for deploy:
+        cmd_masks = torch.logical_and(self.cmd_time_buf == 0, self.progress_buf*self.control_dt>0.5).type(torch.float32)
+        self.cmd_time_buf[:] = cmd_masks*(self.progress_buf*self.control_dt) + (1.0 - cmd_masks)*self.cmd_time_buf
         # check termination
         body_contacts = torch.any(torch.norm(self.contact_forces[:, self.terminate_touch_indices, :], dim=-1) > 1.0, dim=-1)
         landing_wo_turns = torch.logical_and(self.stage_buf[:, 3] == 1.0, torch.logical_and(foot_contact.mean(dim=-1) > 0.0, 1 - self.is_half_turn_buf))
