@@ -19,7 +19,7 @@ import torch
 import wandb
 import time
 import glob
-
+import csv
 def getParser():
     parser = argparse.ArgumentParser()
     # common
@@ -301,41 +301,52 @@ def test(args, task_cfg, algo_cfg):
     # start rollouts
     policy_exp = torch.jit.load("model.pt")
     policy_exp.eval()
-    policy_exp.to(device=agent.device)
+    policy_exp.to("cpu")
     for _ in range(100):
         reward_sums_tensor = torch.zeros((args.n_envs, args.reward_dim), device=args.device, requires_grad=False, dtype=torch.float32)
         cost_sums_tensor = torch.zeros((args.n_envs, args.cost_dim), device=args.device, requires_grad=False, dtype=torch.float32)
         start_time = time.time()
+        filename = "tensor_output.csv"
 
-        for step_idx in range(args.max_episode_len):
-            with torch.no_grad():
-                count+=0.02
+        # 打开文件以便写入
+        with open(filename, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(["orint", "dof_p", "dof_v","v","p","omgea"])  # 替换为你的列名
 
-                reshaped_obs = obs_tensor.view(-1, 420)
-                cur_mean = torch.tensor(mean).to(agent.device)
-                cur_var = torch.tensor(var).to(agent.device)
-                reshaped_mean = cur_mean.view(1, -1).tile(1,10)
-                reshaped_var = cur_var.view(1, -1).tile(1, 10)
-                norm_obs = (reshaped_obs - reshaped_mean)/torch.sqrt(reshaped_var + 1e-8)
-                norm_obs=norm_obs.to(torch.float32)
-                # print(norm_obs)
-                actions_tensor=policy_exp(norm_obs)[0]
-                # print("actions_tensor",actions_tensor,"\n")
-                # actions_tensor = agent.act_inference(obs_tensor, True)
-                # print("right actions_tensor",actions_tensor,"\n")
+            for step_idx in range(args.max_episode_len):
+                with torch.no_grad():
+                    count+=0.02
 
-                obs_tensor, states_tensor, rewards_tensor, dones_tensor, infos = vec_env.step(actions_tensor)
-                reward_sums_tensor += rewards_tensor
-                cost_sums_tensor += infos['costs']
-                if infos['dones'][0]:
-                    break
-                elapsed_time = time.time() - start_time
-                if elapsed_time < (step_idx + 1)*vec_env.unwrapped.control_dt:
-                    time.sleep((step_idx + 1)*vec_env.unwrapped.control_dt - elapsed_time)
+                    reshaped_obs = obs_tensor.view(-1, 420)
+                    # print(reshaped_obs[:,-42:])
+                    cur_mean = torch.tensor(mean).to(agent.device)
+                    cur_var = torch.tensor(var).to(agent.device)
+                    reshaped_mean = cur_mean.view(1, -1).tile(1,10)
+                    reshaped_var = cur_var.view(1, -1).tile(1, 10)
+                    norm_obs = (reshaped_obs - reshaped_mean)/torch.sqrt(reshaped_var + 1e-8)
+                    norm_obs=norm_obs.to(torch.float32)
+                    # print(norm_obs[-42:])
+                    # print("reshaped_obs",reshaped_obs[:,-42:-27])
+                    actions_tensor=policy_exp(norm_obs.to("cpu"))
+                    # print(actions_tensor)
+                    obs_tensor, states_tensor, rewards_tensor, dones_tensor, infos = vec_env.step(actions_tensor.to("cuda"))
+                    print(infos['next_states'].size())
+                    print("print(states_tensor.size())",infos['next_states'])
 
-        print(time.time() - start_time)
-        print(reward_sums_tensor[0].cpu().numpy())
-        print(cost_sums_tensor[0].cpu().numpy())
+                    dataset = torch.cat([reshaped_obs[:,-42:-42+24+3], infos['next_states'][:,:9]  ],dim = -1)
+                    numpy_data = dataset.to("cpu").numpy()
+                    writer.writerows(numpy_data)
+                    reward_sums_tensor += rewards_tensor
+                    cost_sums_tensor += infos['costs']
+                    if infos['dones'][0]:
+                        break
+                    elapsed_time = time.time() - start_time
+                    if elapsed_time < (step_idx + 1)*vec_env.unwrapped.control_dt:
+                        time.sleep((step_idx + 1)*vec_env.unwrapped.control_dt - elapsed_time)
+
+            print(time.time() - start_time)
+            print(reward_sums_tensor[0].cpu().numpy())
+            print(cost_sums_tensor[0].cpu().numpy())
         # =============================================== #
 
 

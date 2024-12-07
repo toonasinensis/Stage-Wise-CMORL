@@ -575,6 +575,7 @@ class Env(VecTask):
         self.obs_dict["obs"] = torch.clamp(self.obs_buf, -self.clip_obs, self.clip_obs).to(self.rl_device)
         if self.num_states > 0:
             self.obs_dict["states"] = self.get_state()
+            print("self.obs_dict[""]",self.obs_dict["states"])
         return self.obs_dict, self.rew_buf.to(self.rl_device), self.reset_buf.to(self.rl_device), self.extras
 
     def pre_physics_step(self, actions: torch.Tensor):

@@ -35,7 +35,7 @@ from isaacgymenvs.tasks.base.vec_task import VecTask
 import numpy as np
 import torch
 import os
-
+import csv
 class Env(VecTask):
     def __init__(self, 
                  cfg: dict, 
@@ -549,6 +549,12 @@ class Env(VecTask):
     def step(self, actions: torch.Tensor):
         action_tensor = torch.clamp(actions, -self.clip_actions, self.clip_actions)
         self.pre_physics_step(action_tensor)
+        filename = "data.csv"
+        with open(filename, mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            tensor_ = torch.cat([self.base_quaternions,self.base_positions,self.dof_positions,self.base_ang_vels,self.base_lin_vels,self.dof_velocities],dim=-1)
+            numpy_data = tensor_.to("cpu").numpy()
+            writer.writerows(numpy_data)
 
         # step physics and render each frame
         for i in range(self.control_freq_inv):
@@ -826,8 +832,8 @@ def jit_compute_states(
                     | (torch.norm(calf_contact_forces, dim=2) > 1.0)).type(torch.float)
     gravities = gravity.unsqueeze(0).repeat(base_quaternions.shape[0], 1)
     states = torch.cat([
-        bb_lin_vels, bb_ang_vels, com_height, foot_contacts, 
-        gravities, friction_coeffs, restitution_coeffs, stages], dim=-1)
+        bb_lin_vels,base_positions[:, :3], bb_ang_vels, com_height, foot_contacts, 
+         friction_coeffs, restitution_coeffs, stages], dim=-1)
     return states
 
 @torch.jit.script

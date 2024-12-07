@@ -70,10 +70,10 @@ class ActorGaussian(ActorBase):
         '''
         x = self.model(state)
         mean = self.last_activation(self.mean_decoder(x))
-        log_std = self.std_decoder(x)
-        log_std = torch.clamp(log_std, self.log_std_min, self.log_std_max)
-        std = torch.exp(log_std)
-        return mean, log_std, std
+        # log_std = self.std_decoder(x)
+        # log_std = torch.clamp(log_std, self.log_std_min, self.log_std_max)
+        # std = torch.exp(log_std)
+        return mean#, log_std, std
 
     def updateActionDist(self, state:torch.Tensor, epsilon:torch.Tensor) -> None:
         self.action_mean, self.action_log_std, self.action_std = \

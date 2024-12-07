@@ -73,8 +73,8 @@ class Agent:
       return action_mean
     
     def save_actor(self):
-        # 创建示例输入
-        device = self.actor.device 
+        device = "cpu"
+        temp = copy.deepcopy(self.actor.to(device))
         dummy_input = torch.randn(1, 420,device = device)  # 根据您的模型输入维度调整
         # 使用 torch.jit.trace 导出
         traced_model = torch.jit.trace(self.actor, dummy_input)
